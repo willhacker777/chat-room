@@ -20,6 +20,7 @@ repositories {
 dependencies {
     // This dependency is found on compile classpath of this component and consumers.
     compile 'org.eclipse.jetty:jetty-server:+'
+    compile 'org.eclipse.jetty.websocket:websocket-server:+'
 }
 
 jar {

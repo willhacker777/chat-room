@@ -1,17 +1,35 @@
 package chat_room;
 
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.websocket.server.WebSocketHandler;
+import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Server;
 
 public class Main {
     public static void main(String[] args) {
-        Server server = new Server(8080);
+
         ResourceHandler resourceHandler= new ResourceHandler();
         resourceHandler.setResourceBase("static/index.html");
-        ContextHandler contextHandler= new ContextHandler("/");
-        contextHandler.setHandler(resourceHandler);
-        server.setHandler(contextHandler);
+        ContextHandler staticContext= new ContextHandler("/");
+        staticContext.setHandler(resourceHandler);
+        
+        WebSocketHandler wsHandler = new WebSocketHandler() {
+            @Override
+            public void configure(WebSocketServletFactory factory) {
+                factory.register(MyWebSocketHandler.class);
+            }
+        };
+        ContextHandler wsContext = new ContextHandler("/ws");
+        wsContext.setHandler(wsHandler);
+
+        ContextHandlerCollection contexts = new ContextHandlerCollection();
+        contexts.setHandlers(new Handler[] { staticContext, wsContext });
+
+        Server server = new Server(8080);
+        server.setHandler(contexts);
         try {
             server.start();
             server.join();

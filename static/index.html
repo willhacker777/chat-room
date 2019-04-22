@@ -1,10 +1,43 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8">
-<title>Chat Room</title>
-</head>
-<body>
-    <h1>Welcome to Chat Room</h1>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <title>Chat Room</title>
+    </head>
+    <body>
+        <h1>Welcome to Chat Room</h1>
+        <div id="info" />
+        <script>
+            var ws = new WebSocket("ws://localhost:8080/ws/");
+
+            ws.onopen = function() {
+                var p = document.createElement("p");
+                var text = document.createTextNode("onopen");
+                p.appendChild(text);
+                document.getElementById("info").appendChild(p);
+                ws.send("Hello Server");
+            };
+
+            ws.onmessage = function (evt) {
+                var p = document.createElement("p");
+                var text = document.createTextNode("onmessage: " + evt.data);
+                p.appendChild(text);
+                document.getElementById("info").appendChild(p);
+            };
+
+            ws.onclose = function() {
+                var p = document.createElement("p");
+                var text = document.createTextNode("onclose");
+                p.appendChild(text);
+                document.getElementById("info").appendChild(p);
+            };
+
+            ws.onerror = function(err) {
+                var p = document.createElement("p");
+                var text = document.createTextNode("onerror: " + err);
+                p.appendChild(text);
+                document.getElementById("info").appendChild(p);
+            };
+        </script>
+    </body>
 </html>
