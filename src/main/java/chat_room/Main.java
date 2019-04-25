@@ -19,6 +19,7 @@ public class Main {
         WebSocketHandler wsHandler = new WebSocketHandler() {
             @Override
             public void configure(WebSocketServletFactory factory) {
+                factory.getPolicy().setIdleTimeout(600 * 1000);
                 factory.register(MyWebSocketHandler.class);
             }
         };

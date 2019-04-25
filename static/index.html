@@ -38,6 +38,12 @@
                 p.appendChild(text);
                 document.getElementById("info").appendChild(p);
             };
+
+            var hb = setInterval(heartBeat, 300 * 1000);
+
+            function heartBeat() {
+                ws.send("Client Heart Beat");
+            } 
         </script>
     </body>
 </html>
