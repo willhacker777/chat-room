@@ -8,7 +8,7 @@ import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 
-public class Main {
+public final class Main {
     public static void main(String[] args) {
 
         ResourceHandler resourceHandler= new ResourceHandler();

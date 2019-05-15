@@ -6,16 +6,21 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketError;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import org.json.JSONObject;
 
 @WebSocket
-public class MyWebSocketHandler {
-    private static SessionManager sessionManager = SessionManager.singleInstance;
+public final class MyWebSocketHandler {
+    private final static SessionManager sessionManager;
+    private final static MessageHandler messageHandler;
+    static {
+        sessionManager = new SessionManager();
+        messageHandler = new MessageHandler();
+    }
     @OnWebSocketConnect
     public void onConnect(Session session) {
-        if (MyWebSocketHandler.sessionManager.isValidSession(session)) {
+        if (sessionManager.isValidSession(session)) {
             try {
-                int id = MyWebSocketHandler.sessionManager.getSessionId(session);
-                System.out.println("Connect: session exists, session id = " + id);
+                System.out.println("MyWebSocketHandler::onConnect: session exists");
                 session.close();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
@@ -23,39 +28,45 @@ public class MyWebSocketHandler {
             return;
         }
         try {
-            MyWebSocketHandler.sessionManager.addSession(session);
-            int id = MyWebSocketHandler.sessionManager.getSessionId(session);
-            System.out.println("Connect: session id = " + id);
+            sessionManager.add(session);
+            System.out.println("MyWebSocketHandler::onConnect: session added");
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
     @OnWebSocketMessage
     public void onMessage(Session session, String message) {
-        if (!MyWebSocketHandler.sessionManager.isValidSession(session)) {
-            System.out.println("Message: invalid session");
+        if (!sessionManager.isValidSession(session)) {
+            System.out.println("MyWebSocketHandler::onMessage: invalid session");
             session.close();
             return;
         }
         try {
-            int id = MyWebSocketHandler.sessionManager.getSessionId(session);
-            System.out.println("Message: session id = " + id);
-            System.out.println("Message: " + message);
+            System.out.println("MyWebSocketHandler::onMessage: Message = " + message);
+
+            //handle message
+            JSONObject json = new JSONObject(message);
+            messageHandler.handle(session, json);
+
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
     @OnWebSocketClose
     public void onClose(Session session, int statusCode, String reason) {
-        System.out.println("Close: statusCode=" + statusCode + ", reason=" + reason);
-        if (!MyWebSocketHandler.sessionManager.isValidSession(session)) {
-            System.out.println("Close: invalid session");
+        System.out.println("MyWebSockethandler::onClose: statusCode=" + statusCode + ", reason=" + reason);
+        if (!sessionManager.isValidSession(session)) {
+            System.out.println("MyWebSockethandler::onClose: invalid session");
             return;
         }
         try {
-            int id = MyWebSocketHandler.sessionManager.getSessionId(session);
-            System.out.println("Close: session id = " + id);
-            MyWebSocketHandler.sessionManager.removeSession(session);
+            //handle logout message
+            JSONObject json = new JSONObject();
+            json.put("cmd", "logOutInternal");
+            messageHandler.handle(session, json);
+
+            sessionManager.remove(session);
+            System.out.println("MyWebSockethandler::onClose: session closed");
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }

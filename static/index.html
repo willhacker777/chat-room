@@ -8,14 +8,15 @@
         <h1>Welcome to Chat Room</h1>
         <div id="info" />
         <script>
-            var ws = new WebSocket("ws://localhost:8080/ws/");
+            var wsRemoteEndpoint = "ws://" + window.location.host + "/ws/";
+            var ws = new WebSocket(wsRemoteEndpoint);
 
             ws.onopen = function() {
                 var p = document.createElement("p");
                 var text = document.createTextNode("onopen");
                 p.appendChild(text);
                 document.getElementById("info").appendChild(p);
-                ws.send("Hello Server");
+                //ws.send("Hello Server");
             };
 
             ws.onmessage = function (evt) {
@@ -39,10 +40,10 @@
                 document.getElementById("info").appendChild(p);
             };
 
-            var hb = setInterval(heartBeat, 300 * 1000);
+            var hb = setInterval(heartBeat, 3 * 1000);
 
             function heartBeat() {
-                ws.send("Client Heart Beat");
+                ws.send(JSON.stringify({"cmd" : "heartbeat"}));
             } 
         </script>
     </body>
