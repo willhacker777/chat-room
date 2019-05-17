@@ -38,6 +38,10 @@ function messageHandler(evt) {
             debug("logInReturn success");
             renderChatPage();
         }
+    } else if (json.cmd == "forceLogOut") {
+        debug("forceLogOut, message = " + json.message);
+        alert(json.message);
+        renderLoginPage();
     }
 }
 

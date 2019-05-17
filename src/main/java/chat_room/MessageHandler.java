@@ -48,6 +48,14 @@ public final class MessageHandler {
                 retJson.put("message", "Invalid User Name or Password");
                 session.getRemote().sendString(retJson.toString());
             } else {
+                if (onlineManager.isValidUserName(userName)) {
+                    Session oldSession = onlineManager.getSessionByUserName(userName);
+                    JSONObject retJson = new JSONObject();
+                    retJson.put("cmd", "forceLogOut");
+                    retJson.put("message", "You are logged in from a different location");
+                    oldSession.getRemote().sendString(retJson.toString());
+                    onlineManager.remove(oldSession);
+                }
                 onlineManager.add(session, userName);
                 JSONObject retJson = new JSONObject();
                 retJson.put("cmd", "logInReturn");
@@ -59,7 +67,8 @@ public final class MessageHandler {
             if (!onlineManager.isValidSession(session)) {
                 JSONObject retJson = new JSONObject();
                 retJson.put("cmd", "logOutReturn");
-                retJson.put("data", "Invalid Session");
+                retJson.put("status", "fail");
+                retJson.put("message", "Invalid Session");
                 session.getRemote().sendString(retJson.toString());
             } else {
                 onlineManager.remove(session);
@@ -74,7 +83,8 @@ public final class MessageHandler {
             if (!onlineManager.isValidSession(session)) {
                 JSONObject retJson = new JSONObject();
                 retJson.put("cmd", "sendMessageReturn");
-                retJson.put("data", "Invalid Session");
+                retJson.put("status", "fail");
+                retJson.put("message", "Invalid Session");
                 session.getRemote().sendString(retJson.toString());
             } else {
                 String userName = onlineManager.getUserNameBySession(session);

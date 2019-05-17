@@ -10,16 +10,27 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public final class OnlineManager {
     private final Map<Session, String> sessionToUserName;
+    private final Map<String, Session> userNameToSession;
     private final ReadWriteLock readWriteLock;
     
     public OnlineManager() {
-        sessionToUserName= new HashMap<Session, String>();
+        sessionToUserName = new HashMap<Session, String>();
+        userNameToSession = new HashMap<String, Session>();
         readWriteLock = new ReentrantReadWriteLock();
     }
     public boolean isValidSession(Session session) {
         boolean ret = false;
         readWriteLock.readLock().lock();
         if (sessionToUserName.containsKey(session)) {
+            ret = true;
+        }
+        readWriteLock.readLock().unlock();
+        return ret;
+    }
+    public boolean isValidUserName(String userName) {
+        boolean ret = false;
+        readWriteLock.readLock().lock();
+        if (userNameToSession.containsKey(userName)) {
             ret = true;
         }
         readWriteLock.readLock().unlock();
@@ -36,6 +47,17 @@ public final class OnlineManager {
         readWriteLock.readLock().unlock();
         return ret;
     }
+    public Session getSessionByUserName(String userName) throws Exception {
+        Session ret = null;
+        readWriteLock.readLock().lock();
+        if (!userNameToSession.containsKey(userName)) {
+            readWriteLock.readLock().unlock();
+            throw new Exception("OnlineManager::getSessionByUserName: invalid userName");
+        }
+        ret = userNameToSession.get(userName);
+        readWriteLock.readLock().unlock();
+        return ret;
+    }
     public void add(Session session, String userName) throws Exception {
         if (session == null || userName == null) {
             throw new Exception("OnlineManager::add: session or userName is null");
@@ -45,7 +67,12 @@ public final class OnlineManager {
             readWriteLock.writeLock().unlock();
             throw new Exception("OnlineManager::add: session exists");
         }
+        if (userNameToSession.containsKey(userName)) {
+            readWriteLock.writeLock().unlock();
+            throw new Exception("OnlineManager::add: userName exists");
+        }
         sessionToUserName.put(session, userName);
+        userNameToSession.put(userName, session);
         readWriteLock.writeLock().unlock();
     }
     public void remove(Session session) throws Exception {
@@ -57,7 +84,9 @@ public final class OnlineManager {
             readWriteLock.writeLock().unlock();
             throw new Exception("OnlineManager::remove: invalid session");
         }
+        String userName = sessionToUserName.get(session);
         sessionToUserName.remove(session);
+        userNameToSession.remove(userName);
         readWriteLock.writeLock().unlock();
     }
     public void broadcast(JSONObject json) throws Exception {
