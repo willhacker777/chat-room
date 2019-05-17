@@ -1,5 +1,5 @@
 function debug(str) {
-    $("#debug").append("<li>" + str + "</li>");
+    //$("#debug").append("<div class=\"alert alert-info\">" + new Date().toLocaleString() + ": " + str + "</div>");
 }
 
 function messageHandler(evt) {
@@ -10,7 +10,7 @@ function messageHandler(evt) {
         ws.send(JSON.stringify({"cmd": "checkLoginState"}));
         debug("check login state");
 
-        var hb = setInterval(heartBeat, 3 * 1000);
+        var hb = setInterval(heartBeat, 300 * 1000);
         function heartBeat() {
             if (ws.readyState != ws.OPEN) {
                 clearInterval(hb);
@@ -26,33 +26,59 @@ function messageHandler(evt) {
             renderChatPage();
         }
     } else if (json.cmd == "heartbeatReturn") {
-        if (json.data != "ok") {
-            debug("heartbeatReturn is not ok");
+        if (json.status != "success") {
+            debug("heartbeatReturn failed");
+        }
+    } else if (json.cmd == "logInReturn") {
+        if (json.status != "success") {
+            debug("logInReturn fail, message = " + json.message);
+            $("#loginInfo").text(json.message);
+            $("#loginInfo").show();
+        } else {
+            debug("logInReturn success");
+            renderChatPage();
         }
     }
 }
 
 function renderLoginPage() {
-    $("#main").text("login page");
+    $("#loginContainer").show();
 }
 
 function renderChatPage() {
-    $("#main").text("chat page");
+    $("#loginContainer").hide();
 }
 
-var wsRemoteEndpoint = "ws://" + location.host + "/ws/";
-var ws = new WebSocket(wsRemoteEndpoint);
+var ws = null;
 
-ws.onopen = function() {
-    debug("onopen");
-};
+$(document).ready(function() {
+    var wsRemoteEndpoint = "ws://" + location.host + "/ws/";
+    ws = new WebSocket(wsRemoteEndpoint);
 
-ws.onmessage = messageHandler;
+    ws.onopen = function() {
+        debug("onopen");
+    };
 
-ws.onclose = function() {
-    debug("onclose");
-};
+    ws.onmessage = messageHandler;
 
-ws.onerror = function(err) {
-    debug("onerror: err.code = " + err.data);
-};
+    ws.onclose = function() {
+        debug("onclose");
+    };
+
+    ws.onerror = function(err) {
+        debug("onerror: err.code = " + err.data);
+    };
+
+    $("#loginButton").click(function() {
+        if (ws.readyState != ws.OPEN) {
+            $("#loginInfo").text("Websocket error, please try again.");
+            $("#loginInfo").show();
+            return false;
+        }
+        ws.send(JSON.stringify({
+            "cmd": "logIn",
+            "userName": $("#inputUserName").val(),
+            "password": $("#inputPassword").val()
+        }));
+    });
+});

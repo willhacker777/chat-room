@@ -10,6 +10,11 @@ public final class MessageHandler {
     
     public MessageHandler() {
         accountManager = new AccountManager();
+        try {
+            accountManager.add("root", "123");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
         onlineManager = new OnlineManager();
     }
     public void handle(Session session, JSONObject json) throws Exception {
@@ -24,7 +29,7 @@ public final class MessageHandler {
             System.out.println("MessageHandler::handle: cmd = heartbeat");
             JSONObject retJson = new JSONObject();
             retJson.put("cmd", "heartbeatReturn");
-            retJson.put("data", "ok");
+            retJson.put("status", "success");
             session.getRemote().sendString(retJson.toString());
         } else if (cmd.equals("logIn")) {
             System.out.println("MessageHandler::handle: cmd = logIn");
@@ -33,15 +38,21 @@ public final class MessageHandler {
             if (onlineManager.isValidSession(session)) {
                 JSONObject retJson = new JSONObject();
                 retJson.put("cmd", "logInReturn");
-                retJson.put("data", "Session Already Logged In");
+                retJson.put("status", "fail");
+                retJson.put("message", "Session Already Logged In");
                 session.getRemote().sendString(retJson.toString());
             } else if (!accountManager.isValidUserNameAndPassword(userName, password)) {
                 JSONObject retJson = new JSONObject();
                 retJson.put("cmd", "logInReturn");
-                retJson.put("data", "Invalid User Name or Password");
+                retJson.put("status", "fail");
+                retJson.put("message", "Invalid User Name or Password");
                 session.getRemote().sendString(retJson.toString());
             } else {
                 onlineManager.add(session, userName);
+                JSONObject retJson = new JSONObject();
+                retJson.put("cmd", "logInReturn");
+                retJson.put("status", "success");
+                session.getRemote().sendString(retJson.toString());
             }
         } else if (cmd.equals("logOut")) {
             System.out.println("MessageHandler::handle: cmd = logOut");
