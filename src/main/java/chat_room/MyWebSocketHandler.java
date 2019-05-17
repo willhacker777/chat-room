@@ -29,6 +29,9 @@ public final class MyWebSocketHandler {
         }
         try {
             sessionManager.add(session);
+            JSONObject json = new JSONObject();
+            json.put("cmd", "welcome");
+            session.getRemote().sendString(json.toString());
             System.out.println("MyWebSocketHandler::onConnect: session added");
         } catch (Exception e) {
             System.out.println(e.getMessage());

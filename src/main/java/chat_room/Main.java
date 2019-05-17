@@ -12,8 +12,8 @@ public final class Main {
     public static void main(String[] args) {
 
         ResourceHandler resourceHandler= new ResourceHandler();
-        resourceHandler.setResourceBase("static/index.html");
-        ContextHandler staticContext= new ContextHandler("/");
+        resourceHandler.setResourceBase("static/");
+        ContextHandler staticContext = new ContextHandler("/");
         staticContext.setHandler(resourceHandler);
         
         WebSocketHandler wsHandler = new WebSocketHandler() {
